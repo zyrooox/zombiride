@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="content">
+        <h1>Identify yourself</h1>
+        <input id="animatedInput" type="password" placeholder="Security code">
+        <button id="boutton">Login</button>
+    </div>
+    <div class="retro_screen_glowing"></div>
+    <div class="retro_console_effect"></div>
+    <div class="retro_screen_border"></div>
+    <div class="scanlines"></div>
+    <script>
+        const input = document.getElementById('animatedInput');
+        const texte = "*************";
+        const button = document.getElementById('boutton');
+        const beep = new Audio('beep.mp3');
+        
+        beep.volume = 0.7;
+        beep.preload = 'auto';
+        
+        let index = 0;
+        let audioUnlocked = false;
+      
+        function taperTexte() {
+          if(index < texte.length) {
+            input.value += texte[index];
+            index++;
+            setTimeout(taperTexte, 100); 
+          } else {
+            if(audioUnlocked) {
+              beep.currentTime = 0;
+              beep.play().catch(() => {});
+            } else {
+              beep.play().then(() => {
+                beep.pause();
+                beep.currentTime = 0;
+                audioUnlocked = true;
+                beep.play().catch(() => {});
+              }).catch(() => {});
+            }
+          }
+        }
+        
+        function unlockAudio() {
+          if(!audioUnlocked) {
+            beep.volume = 0.01;
+            beep.play().then(() => {
+              beep.pause();
+              beep.currentTime = 0;
+              beep.volume = 0.7;
+              audioUnlocked = true;
+            }).catch(() => {});
+          }
+        }
+
+        function playBeep() {
+            if(audioUnlocked) {
+                const beepSound = new Audio('beep.mp3');
+                beepSound.volume = 0.7;
+                beepSound.play().catch(() => {});
+            }
+        }
+
+        function granted() {
+            if(button) button.remove();
+            setTimeout(() => {
+                window.location.href = 'main.html';
+            }, 100);
+        }
+      
+        window.onload = () => {
+          input.value = '';
+          document.body.addEventListener('click', unlockAudio, { once: true });
+          document.body.addEventListener('touchstart', unlockAudio, { once: true });
+          document.body.addEventListener('keydown', unlockAudio, { once: true });
+          setTimeout(unlockAudio, 100);
+          setTimeout(taperTexte, 1000);
+          const animationDuration = 1000 + (texte.length * 100);
+          setTimeout(granted, animationDuration + 500);
+          
+          if(button) {
+              button.addEventListener('click', playBeep);
+          }
+        };
+
+        
+      </script>
+</body>
+</html>

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="retro_screen_glowing"></div>
+    <div class="retro_console_effect"></div>
+    <div class="retro_screen_border"></div>
+    <div class="scanlines"></div>
+    <div class="main-content">
+        <h1 class="main-title">Salut, je suis wezrik !</h1>
+        <p class="description">"Ceux qui abandonnent sont comme des nuages : ils passent, mais le soleil finit toujours par revenir." </p>
+        
+        <div class="categories">
+            <div class="category">
+                <h2>Informatique</h2>
+                <p>Tout ce qui touche a la programmation, cybersec, ...</p>
+            </div>
+            <div class="category">
+                <h2>Nature</h2>
+                <p>La foret est la meilleurs chose au monde</p>
+            </div>
+        </div>
+        
+        <div class="social-links">
+            <a href="https://www.instagram.com/wezrik.trt/" class="social-link">Instagram</a>
+            <a href="https://t.me/nkx_74" class="social-link">Telegram</a>
+            <a href="https://www.tiktok.com/@wezrik.ttr?lang=fr" class="social-link">Tiktok</a>
+        </div>
+        
+        <div class="game-container">
+            <div class="game-info">
+                <div class="game-score">Score: <span id="gameScore">0</span></div>
+                <div class="game-instruction">Appuyez sur ESPACE pour jouer</div>
+            </div>
+            <div class="game-canvas" id="gameCanvas">
+                <div class="game-ground"></div>
+                <div class="game-player" id="player"></div>
+                <div class="game-overlay" id="gameOverlay">
+                    <div class="game-over-text">Appuyez sur ESPACE pour commencer</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <h1></h1>
+            
+        </div>
+    </div>
+    
+    <div class="view-counter">
+        <span id="viewCount">0</span> vues
+    </div>
+    <script>
+        const beep = new Audio('beep.mp3');
+        beep.volume = 0.7;
+        beep.preload = 'auto';
+        
+        let audioUnlocked = false;
+        
+        function unlockAudio() {
+            if(!audioUnlocked) {
+                beep.volume = 0.01;
+                beep.play().then(() => {
+                    beep.pause();
+                    beep.currentTime = 0;
+                    beep.volume = 0.7;
+                    audioUnlocked = true;
+                }).catch(() => {});
+            }
+        }
+        
+        function playBeep() {
+            if(audioUnlocked) {
+                const beepSound = new Audio('beep.mp3');
+                beepSound.volume = 0.7;
+                beepSound.play().catch(() => {});
+            }
+        }
+        
+        function updateViewCount() {
+            let views = localStorage.getItem('siteViews');
+            if(views === null) {
+                views = 0;
+            } else {
+                views = parseInt(views);
+            }
+            views++;
+            localStorage.setItem('siteViews', views.toString());
+            document.getElementById('viewCount').textContent = views;
+        }
+        
+        const GRAVITY = -0.85;
+        const JUMP_STRENGTH = 14;
+        const GROUND_Y = 20;
+        const PLAYER_START_X = 50;
+        const PLAYER_START_Y = 20;
+        const MAX_JUMP_HEIGHT = 100;
+        
+        let gameRunning = false;
+        let gameScore = 0;
+        let gameSpeed = 6;
+        let playerY = PLAYER_START_Y;
+        let playerVelocity = 0;
+        let obstacles = [];
+        let obstacleTimer = 0;
+        let nextObstacleTime = 0;
+        let gameLoop = null;
+        let scoreInterval = null;
+        let animationFrame = null;
+        
+        const player = document.getElementById('player');
+        const gameCanvas = document.getElementById('gameCanvas');
+        const gameOverlay = document.getElementById('gameOverlay');
+        const gameScoreElement = document.getElementById('gameScore');
+        
+        const PLAYER_COLLISION_OFFSET_X = 3; 
+        const PLAYER_COLLISION_OFFSET_Y = 8;
+        const OBSTACLE_COLLISION_OFFSET = 3;
+        
+        const BASE_SPEED = 6;
+        const SPEED_INCREASE_INTERVAL = 50;
+        const SPEED_INCREMENT = 0.8;
+        const MIN_OBSTACLE_INTERVAL = 1000;
+        const MAX_OBSTACLE_INTERVAL = 2500;
+        
+        function startGame() {
+            if (gameRunning) return;
+            
+            gameRunning = true;
+            gameScore = 0;
+            gameSpeed = BASE_SPEED;
+            playerY = PLAYER_START_Y;
+            playerVelocity = 0;
+            obstacles = [];
+            obstacleTimer = 0;
+            nextObstacleTime = getRandomObstacleTime();
+            
+            player.style.bottom = PLAYER_START_Y + 'px';
+            player.classList.remove('jumping');
+            gameOverlay.classList.add('hidden');
+            gameScoreElement.textContent = 0;
+            
+            document.querySelectorAll('.game-obstacle').forEach(obs => obs.remove());
+            
+            scoreInterval = setInterval(() => {
+                if (gameRunning) {
+                    gameScore += 2;
+                    gameScoreElement.textContent = gameScore;
+                    
+                    gameSpeed = BASE_SPEED + Math.floor(gameScore / SPEED_INCREASE_INTERVAL) * SPEED_INCREMENT;
+                    
+                    if (gameSpeed > 15) {
+                        gameSpeed = 15;
+                    }
+                }
+            }, 500);
+            
+            function gameUpdate() {
+                if (!gameRunning) return;
+                
+                animationFrame = requestAnimationFrame(gameUpdate);
+                updateGame();
+            }
+            
+            gameUpdate();
+        }
+        
+        function getRandomObstacleTime() {
+            const intervalRange = MAX_OBSTACLE_INTERVAL - MIN_OBSTACLE_INTERVAL;
+            const speedFactor = Math.max(0.5, 1 - (gameSpeed - BASE_SPEED) / 10);
+            return Math.random() * intervalRange * speedFactor + MIN_OBSTACLE_INTERVAL;
+        }
+        
+        function createObstacle() {
+            const obstacle = document.createElement('div');
+            obstacle.className = 'game-obstacle';
+            
+            const sizeOptions = [22, 25, 28, 30, 32, 35];
+            const size = sizeOptions[Math.floor(Math.random() * sizeOptions.length)];
+            
+            const isDouble = Math.random() < 0.2 && gameSpeed > 8;
+            
+            obstacle.style.width = size + 'px';
+            obstacle.style.height = size + 'px';
+            
+            if (gameSpeed > 10) {
+                obstacle.classList.add('fast-obstacle');
+            }
+            
+            gameCanvas.appendChild(obstacle);
+            
+            obstacles.push({
+                element: obstacle,
+                x: gameCanvas.offsetWidth,
+                width: size,
+                height: size,
+                isDouble: isDouble
+            });
+            
+            if (isDouble) {
+                setTimeout(() => {
+                    if (gameRunning) {
+                        createObstacle();
+                    }
+                }, 300);
+            }
+        }
+        
+        function checkCollision(playerRect, obstacleRect) {
+            const playerCollisionRect = {
+                left: playerRect.left + PLAYER_COLLISION_OFFSET_X,
+                right: playerRect.right - PLAYER_COLLISION_OFFSET_X,
+                top: playerRect.top + PLAYER_COLLISION_OFFSET_Y,
+                bottom: playerRect.bottom - PLAYER_COLLISION_OFFSET_Y
+            };
+            
+            const obstacleCollisionRect = {
+                left: obstacleRect.left + OBSTACLE_COLLISION_OFFSET,
+                right: obstacleRect.right - OBSTACLE_COLLISION_OFFSET,
+                top: obstacleRect.top + OBSTACLE_COLLISION_OFFSET,
+                bottom: obstacleRect.bottom - OBSTACLE_COLLISION_OFFSET
+            };
+            
+            return (
+                playerCollisionRect.left < obstacleCollisionRect.right &&
+                playerCollisionRect.right > obstacleCollisionRect.left &&
+                playerCollisionRect.top < obstacleCollisionRect.bottom &&
+                playerCollisionRect.bottom > obstacleCollisionRect.top
+            );
+        }
+        
+        function updateGame() {
+            if (!gameRunning) return;
+            
+            const deltaTime = 16;
+            
+            playerVelocity += GRAVITY;
+            playerY += playerVelocity;
+            
+            if (playerY < PLAYER_START_Y) {
+                playerY = PLAYER_START_Y;
+                playerVelocity = 0;
+            }
+            
+            if (playerY > PLAYER_START_Y + MAX_JUMP_HEIGHT) {
+                playerY = PLAYER_START_Y + MAX_JUMP_HEIGHT;
+                if (playerVelocity > 0) {
+                    playerVelocity = 0;
+                }
+            }
+            
+            player.style.bottom = playerY + 'px';
+            
+            if (playerY < PLAYER_START_Y) {
+                player.classList.add('jumping');
+            } else {
+                player.classList.remove('jumping');
+            }
+            
+            obstacleTimer += deltaTime;
+            if (obstacleTimer >= nextObstacleTime) {
+                createObstacle();
+                obstacleTimer = 0;
+                nextObstacleTime = getRandomObstacleTime();
+            }
+            
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                const obstacle = obstacles[i];
+                
+                let obstacleSpeed = gameSpeed;
+                if (obstacle.element.classList.contains('fast-obstacle')) {
+                    obstacleSpeed *= 1.2;
+                }
+                
+                obstacle.x -= obstacleSpeed;
+                obstacle.element.style.right = (gameCanvas.offsetWidth - obstacle.x) + 'px';
+                
+                const obstacleRect = obstacle.element.getBoundingClientRect();
+                const playerRect = player.getBoundingClientRect();
+                
+                if (checkCollision(playerRect, obstacleRect)) {
+                    gameOver();
+                    return;
+                }
+                
+                if (obstacle.x < -50) {
+                    obstacle.element.remove();
+                    obstacles.splice(i, 1);
+                }
+            }
+        }
+        
+        function jump() {
+            if (!gameRunning) {
+                startGame();
+                return;
+            }
+            
+            if (playerY <= PLAYER_START_Y && playerVelocity <= 0) {
+                playerVelocity = JUMP_STRENGTH;
+                playBeep();
+            }
+        }
+        
+        function gameOver() {
+            gameRunning = false;
+            if (animationFrame) cancelAnimationFrame(animationFrame);
+            if (scoreInterval) clearInterval(scoreInterval);
+            
+            setTimeout(() => {
+                gameOverlay.classList.remove('hidden');
+                const overlayText = gameOverlay.querySelector('.game-over-text');
+                overlayText.textContent = `Game Over! Score: ${gameScore}\nAppuyez sur ESPACE pour rejouer`;
+                
+            }, 50);
+        }
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                jump();
+            }
+        });
+        
+        gameCanvas.addEventListener('click', jump);
+        gameCanvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            jump();
+        });
+        
+        window.onload = () => {
+            updateViewCount();
+            document.body.addEventListener('click', unlockAudio, { once: true });
+            document.body.addEventListener('touchstart', unlockAudio, { once: true });
+            document.body.addEventListener('keydown', unlockAudio, { once: true });
+            setTimeout(unlockAudio, 100);
+            
+            const buttons = document.querySelectorAll('button, .social-link, .nav-link, a');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', playBeep);
+            });
+            
+            const style = document.createElement('style');
+            style.textContent = `
+                .fast-obstacle {
+                    animation: pulse 0.5s infinite alternate;
+                }
+                
+                @keyframes pulse {
+                    from { opacity: 1; }
+                    to { opacity: 0.7; }
+                }
+            `;
+            document.head.appendChild(style);
+        };
+    </script>
+</body>
+</html>

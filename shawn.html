@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shawn</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="retro_screen_glowing"></div>
+    <div class="retro_console_effect"></div>
+    <div class="retro_screen_border"></div>
+    <div class="scanlines"></div>
+    <div class="main-content">
+        <h1 class="main-title">Salut, jsuis Shawnn</h1>
+        <p class="description">"Si ils se sont fait trouver c'est qu'ils n'etaient pas assez bons"</p>
+        
+        <div class="categories">
+            <div class="category">
+                <h2>Informatique</h2>
+                <p>programmation, csint, pentest</p>
+            </div>
+            <div class="category">
+                <h2>Religion</h2>
+                <p>Catholique</p>
+            </div>
+        </div>
+        
+        <div class="social-links">
+            <a href="#" class="social-link">Instagram</a>
+            <a href="#" class="social-link">Telegram</a>
+            <a href="#" class="social-link">Tiktok</a>
+        </div>
+        
+        <div class="navigation">
+            <h1></h1>
+            
+        </div>
+    </div>
+    
+    <div class="view-counter">
+        <span id="viewCount">0</span> vues
+    </div>
+    <script>
+        const beep = new Audio('beep.mp3');
+        beep.volume = 0.7;
+        beep.preload = 'auto';
+        
+        let audioUnlocked = false;
+        
+        function unlockAudio() {
+            if(!audioUnlocked) {
+                beep.volume = 0.01;
+                beep.play().then(() => {
+                    beep.pause();
+                    beep.currentTime = 0;
+                    beep.volume = 0.7;
+                    audioUnlocked = true;
+                }).catch(() => {});
+            }
+        }
+        
+        function playBeep() {
+            if(audioUnlocked) {
+                const beepSound = new Audio('beep.mp3');
+                beepSound.volume = 0.7;
+                beepSound.play().catch(() => {});
+            }
+        }
+        
+        function updateViewCount() {
+            let views = localStorage.getItem('siteViewsShawn');
+            if(views === null) {
+                views = 0;
+            } else {
+                views = parseInt(views);
+            }
+            views++;
+            localStorage.setItem('siteViewsShawn', views.toString());
+            document.getElementById('viewCount').textContent = views;
+        }
+        
+        window.onload = () => {
+            updateViewCount();
+            document.body.addEventListener('click', unlockAudio, { once: true });
+            document.body.addEventListener('touchstart', unlockAudio, { once: true });
+            document.body.addEventListener('keydown', unlockAudio, { once: true });
+            setTimeout(unlockAudio, 100);
+            
+            const buttons = document.querySelectorAll('button, .social-link, .nav-link, a');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', playBeep);
+            });
+        };
+    </script>
+</body>
+</html>

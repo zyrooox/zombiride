@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="retro_screen_glowing"></div>
+    <div class="retro_console_effect"></div>
+    <div class="retro_screen_border"></div>
+    <div class="scanlines"></div>
+    <div class="main-content">
+        <h1 class="main-title">Main Page</h1>
+        <p class="description">Bienvenue sur notre portfolio</p>
+        
+        <div class="profiles-section">
+            <h2 class="section-title">Profils</h2>
+            <div class="profiles-grid">
+                <a href="wezrik .html" class="profile-link">
+                    <div class="profile-card owner-card">
+                        <h3><span class="crown">♔</span> wezrik</h3>
+                    </div>
+                </a>
+                <a href="shawn.html" class="profile-link">
+                    <div class="profile-card">
+                        <h3>Shawnn</h3>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <div class="resources-section">
+            <h2 class="section-title">Ressources</h2>
+            <div class="resources-container">
+                <p class="resources-placeholder">Les ressources seront ajoutées prochainement...</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="view-counter">
+        <span id="viewCount">0</span> vues
+    </div>
+    <script>
+        const beep = new Audio('beep.mp3');
+        beep.volume = 0.7;
+        beep.preload = 'auto';
+        
+        let audioUnlocked = false;
+        
+        function unlockAudio() {
+            if(!audioUnlocked) {
+                beep.volume = 0.01;
+                beep.play().then(() => {
+                    beep.pause();
+                    beep.currentTime = 0;
+                    beep.volume = 0.7;
+                    audioUnlocked = true;
+                }).catch(() => {});
+            }
+        }
+        
+        function playBeep() {
+            if(audioUnlocked) {
+                const beepSound = new Audio('beep.mp3');
+                beepSound.volume = 0.7;
+                beepSound.play().catch(() => {});
+            }
+        }
+        
+        function updateViewCount() {
+            let views = localStorage.getItem('siteViewsMain');
+            if(views === null) {
+                views = 0;
+            } else {
+                views = parseInt(views);
+            }
+            views++;
+            localStorage.setItem('siteViewsMain', views.toString());
+            document.getElementById('viewCount').textContent = views;
+        }
+        
+        window.onload = () => {
+            updateViewCount();
+            document.body.addEventListener('click', unlockAudio, { once: true });
+            document.body.addEventListener('touchstart', unlockAudio, { once: true });
+            document.body.addEventListener('keydown', unlockAudio, { once: true });
+            setTimeout(unlockAudio, 100);
+            
+            const buttons = document.querySelectorAll('button, .social-link, .nav-link, a, .profile-link');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', playBeep);
+            });
+        };
+    </script>
+    <style>
+        .profiles-section, .resources-section {
+            margin: 3rem 0;
+        }
+        
+        .section-title {
+            font-family: console, 'Courier New', monospace;
+            color: #ffffff;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            border-bottom: 2px solid #ffffff;
+            padding-bottom: 1rem;
+        }
+        
+        .profiles-grid {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .profile-link {
+            text-decoration: none;
+        }
+        
+        .profile-card {
+            padding: 30px 40px;
+            border: 2px solid #ffffff;
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            transition: all 0.3s;
+            min-width: 200px;
+            text-align: center;
+        }
+        
+        .profile-card:hover {
+            background: #ffffff;
+            color: #000000;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+        }
+        
+        .profile-card h3 {
+            font-family: console, 'Courier New', monospace;
+            color: #ffffff;
+            font-size: 1.5rem;
+            margin: 0;
+            transition: color 0.3s;
+        }
+        
+        .profile-card:hover h3 {
+            color: #000000;
+        }
+        
+        .crown {
+            color: #ffff00;
+            font-size: 1.8rem;
+            display: inline-block;
+            margin-right: 8px;
+            text-shadow: 
+                0 0 10px rgba(255, 255, 0, 1),
+                0 0 20px rgba(255, 255, 0, 0.8);
+            animation: crownGlow 2s ease-in-out infinite;
+            vertical-align: middle;
+        }
+        
+        @keyframes crownGlow {
+            0%, 100% { 
+                text-shadow: 
+                    0 0 10px rgba(255, 255, 0, 1),
+                    0 0 20px rgba(255, 255, 0, 0.8);
+            }
+            50% { 
+                text-shadow: 
+                    0 0 15px rgba(255, 255, 0, 1),
+                    0 0 30px rgba(255, 255, 0, 1),
+                    0 0 40px rgba(255, 255, 0, 0.8);
+            }
+        }
+        
+        .owner-card {
+            border-color: #ffff00;
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.5);
+        }
+        
+        .owner-card:hover {
+            border-color: #ffff00;
+            box-shadow: 0 0 25px rgba(255, 255, 0, 0.8);
+        }
+        
+        .resources-container {
+            padding: 30px;
+            border: 2px solid #ffffff;
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            text-align: center;
+        }
+        
+        .resources-placeholder {
+            font-family: console, 'Courier New', monospace;
+            color: #ffffff;
+            font-size: 1rem;
+            opacity: 0.7;
+            margin: 0;
+        }
+    </style>
+</body>
+</html>
+
